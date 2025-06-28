@@ -4,6 +4,7 @@
 ; --- SQLite Integration ---
 #Include ..\lib\Class_SQLiteDB.ahk
 #Include ..\src\init_db.ahk
+#Include ..\src\item_db.ahk
 
 ; Database initialization
 try {
@@ -13,17 +14,7 @@ try {
 }
 
 RefreshItems() {
-    items := []
-    dbPath := A_ScriptDir "\..\market.db"
-    db := SQLiteDB()
-    if db.OpenDB(dbPath) {
-        if db.GetTable("SELECT name FROM items ORDER BY name", &tb) && tb.HasRows {
-            for row in tb.Rows
-                items.Push(row[1])
-        }
-        db.CloseDB()
-    }
-    return items
+    return GetAllItems()
 }
 
 items := RefreshItems()
@@ -38,27 +29,18 @@ myGui.OnEvent('Close', (*) => ExitApp())
 myGui.Title := 'Market Scanner'
 myGui.Show('w300 h240')
 
-ScanMarket(*) {
-    MsgBox('Market scan feature coming soon!', 'Info', 'Iconi')
-}
-
 AddItem(*) {
-    result := InputBox('Enter new item name:', 'Add Item', '')
+    result := InputBox('Enter new item name:', 'Add Item', '',)
     if !result.Result
         return
     newItem := result.Value
     if !newItem
         return
-    db := SQLiteDB()
-    dbPath := A_ScriptDir "\..\market.db"
-    if db.OpenDB(dbPath) {
-        if db.Exec("INSERT INTO items (name) VALUES (?)", newItem) {
-            itemList.Delete()
-            itemList.Add(RefreshItems())
-        } else {
-            MsgBox("Failed to add item (maybe duplicate name).", "Error", "IconError")
-        }
-        db.CloseDB()
+    if AddItemToDB(newItem) {
+        itemList.Delete()
+        itemList.Add(GetAllItems())
+    } else {
+        MsgBox("Failed to add item (maybe duplicate name).", "Error", "IconError")
     }
 }
 
@@ -67,22 +49,20 @@ EditItem(*) {
     if !idx
         return
     oldName := itemList.Text
-    result := InputBox('Edit item name:', 'Edit Item', oldName,)
+    if !oldName 
+    return
+    ; ToDo: Add oldName to InputBox later
+    result := InputBox('Edit item name:', 'Edit Item')
     if !result.Result
         return
     newName := result.Value
     if !newName || (newName = oldName)
         return
-    db := SQLiteDB()
-    dbPath := A_ScriptDir "\..\market.db"
-    if db.OpenDB(dbPath) {
-        if db.Exec("UPDATE items SET name = ? WHERE name = ?", newName, oldName) {
-            itemList.Delete()
-            itemList.Add(RefreshItems())
-        } else {
-            MsgBox("Failed to edit item (maybe duplicate name).", "Error", "IconError")
-        }
-        db.CloseDB()
+    if EditItemInDB(oldName, newName) {
+        itemList.Delete()
+        itemList.Add(GetAllItems())
+    } else {
+        MsgBox("Failed to edit item (maybe duplicate name)")
     }
 }
 
@@ -91,17 +71,17 @@ RemoveItem(*) {
     if !idx
         return
     name := itemList.Text
-    if MsgBox("Delete item '" name "'?", "Confirm") = "N"
-        return
-    db := SQLiteDB()
-    dbPath := A_ScriptDir "\..\market.db"
-    if db.OpenDB(dbPath) {
-        if db.Exec("DELETE FROM items WHERE name = ?", name) {
-            itemList.Delete()
-            itemList.Add(RefreshItems())
-        } else {
-            MsgBox("Failed to remove item.", "Error", "IconError")
-        }
-        db.CloseDB()
+    ;if MsgBox("Delete item '" name "'?", "Confirm", "YNIconQuestion") = "N"
+    ;    return
+    if RemoveItemFromDB(name) {
+        itemList.Delete()
+        itemList.Add(GetAllItems())
+    } else {
+        MsgBox("Failed to remove item.", "Error", "IconError")
     }
 }
+
+ScanMarket(*) {
+    MsgBox('Market scan feature coming soon!', 'Info', 'Iconi')
+}
+
