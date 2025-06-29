@@ -25,7 +25,7 @@ myGui := Gui()
 myGui.AddButton('x20 y50 w80 h30', 'Add Item').OnEvent('Click', AddItem)
 myGui.AddButton('x110 y50 w80 h30', 'Edit Item').OnEvent('Click', EditItem)
 myGui.AddButton('x200 y50 w80 h30', 'Remove Item').OnEvent('Click', RemoveItem)
-myGui.AddButton('x20 y220 w260 h30', 'Scan Market').OnEvent('Click', ScanMarket)
+myGui.AddButton('x20 y220 w260 h30', 'Scan Market').OnEvent('Click', Scan)
 
 itemList := myGui.AddListBox('x20 y90 w260 h120 vItemList', items)
 
@@ -113,10 +113,12 @@ RemoveItem(*) {
     }
 }
 
-ScanMarket(*) {
-    FindMarketBoard()
+Scan(*) {
+    Log("Starting market scan.")
+    ScanMarket(items)
 
-    Log("We go here")
+    ; TODO: Check for completion
+    Log("Market scan completed.")
 }
 
 ToggleLogBox(ctrl, *) {
