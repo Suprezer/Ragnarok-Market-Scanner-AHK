@@ -9,7 +9,8 @@ AddItemToDB(name) {
     db := SQLiteDB()
     ok := false
     if db.OpenDB(dbPath) {
-        ok := db.Exec("INSERT INTO items (name) VALUES ('?')", name)
+        safeName := StrReplace(name, "'", "''")
+        ok := db.Exec("INSERT INTO items (name) VALUES ('" safeName "')")
         db.CloseDB()
     }
     return ok
