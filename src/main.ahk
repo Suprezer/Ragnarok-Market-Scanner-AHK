@@ -11,6 +11,7 @@ if !A_IsAdmin
 #Include ..\src\init_db.ahk
 #Include ..\src\item_db.ahk
 #Include ..\src\scanner.ahk
+#Include ..\src\utility.ahk
 
 global logBox
 
@@ -61,8 +62,11 @@ Log(msg) {
     global logBox
     if !IsSet(logBox)
         return
-    ; Add to GUI log
     logBox.Value := logBox.Value . msg . "`r`n"
+    logBox.Focus()
+    ; Scroll to the bottom
+    SendMessage(0xB1, -1, -1, logBox.Hwnd)
+    SendMessage(0xB7, 0, 0, logBox.Hwnd)
     ; Write to file with timestamp (`n)
     logFile := A_ScriptDir "\..\log.txt"
     FileAppend(Format("[{}] {}`n", FormatTime(A_Now, "yyyy-MM-dd HH:mm:ss"), msg), logFile, "UTF-8")
@@ -132,6 +136,8 @@ RemoveItem(*) {
 Scan(*) {
     Log("Starting market scan.")
     
+    items := RefreshItems()
+
     ScanMarket(items)
 
     ; TODO: Check for completion

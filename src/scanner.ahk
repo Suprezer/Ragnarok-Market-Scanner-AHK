@@ -1,5 +1,7 @@
 #Requires AutoHotkey v2.0
 
+#Include ..\src\ocr.ahk
+
 FindMarketBoard() {
     imagePath := A_WorkingDir "\assets\search_template.png"
     if !FileExist(imagePath) {
@@ -78,6 +80,7 @@ OpenMarketBoard() {
 }
 
 ScanMarket(itemList) {
+    CoordMode("Mouse", "Screen")
     results := []
 
     Log("Preparing Market board for scanning...")
@@ -91,12 +94,18 @@ ScanMarket(itemList) {
 
     ;CloseMarketBoard()
     Log("Market board fully prepared.")
-    Sleep(1000)
+    Sleep(300)
 
     searchBoxX := coords.searchBoxX
     searchBoxY := coords.searchBoxY
     searchButtonX := coords.searchButtonX
     searchButtonY := coords.searchButtonY
+
+    ; Item listing region
+    itemListingRegionX := searchButtonX -80
+    itemListingRegionY := searchButtonY + 37
+    ;Log("searchButtonX: " searchButtonX ", searchButtonY: " searchButtonY)
+    ;Log("Item listing region: " itemListingRegionX ", " itemListingRegionY)
 
     for item in itemList {
         Log("Scanning item: " item)
@@ -110,8 +119,17 @@ ScanMarket(itemList) {
 
         MouseMove(searchButtonX, searchButtonY, 0)
         ClickLButton()
-        Sleep(5000) ; Testing
-        ; TODO: Capture price(s) for the item
+        Sleep(1500)
+
+        imagePath := A_ScriptDir "\item_Listing.png"
+        CaptureRegion(itemListingRegionX, itemListingRegionY, -1099, -338, A_ScriptDir "\item_listing.png")
+
+        ocrText := OCR(A_ScriptDir "\item_listing.png", 6)
+        rows := ParseListingRows(ocrText)
+        for i, row in rows {
+            Log("Row " i ": " row)
+        }
+
+        Sleep(500)
     }
-        ;*/
 }
