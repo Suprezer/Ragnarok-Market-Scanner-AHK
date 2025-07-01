@@ -1,6 +1,12 @@
 ; Ragnarok Market Scanner - Requires (AHK v2)
 ; Author: Jonas M. Olesen
 
+if !A_IsAdmin
+{
+    Run '*RunAs "' A_ScriptFullPath '"'
+    ExitApp
+}
+
 #Include ..\lib\Class_SQLiteDB.ahk
 #Include ..\src\init_db.ahk
 #Include ..\src\item_db.ahk
@@ -21,24 +27,32 @@ RefreshItems() {
 
 items := RefreshItems()
 
+alwaysOnTop := IniRead("settings.ini", "Options", "AlwaysOnTop", 0)
+showConsoleLog := IniRead("settings.ini", "Options", "ShowConsoleLog", 1)
+
 myGui := Gui()
 myGui.AddButton('x20 y50 w80 h30', 'Add Item').OnEvent('Click', AddItem)
 myGui.AddButton('x110 y50 w80 h30', 'Edit Item').OnEvent('Click', EditItem)
 myGui.AddButton('x200 y50 w80 h30', 'Remove Item').OnEvent('Click', RemoveItem)
-myGui.AddButton('x20 y220 w260 h30', 'Scan Market').OnEvent('Click', Scan)
+
+myGui.AddButton('x20 y220 w120 h30', 'Set Board Location').OnEvent('Click', SetMarketBoardLocation)
+myGui.AddButton('x150 y220 w120 h30', 'Scan Market').OnEvent('Click', Scan)
 
 itemList := myGui.AddListBox('x20 y90 w260 h120 vItemList', items)
 
 alwaysOnTopBox := myGui.AddCheckBox('x200 y5 w120 h20', 'Always On Top')
+alwaysOnTopBox.Value := alwaysOnTop
 alwaysOnTopBox.OnEvent('Click', ToggleAlwaysOnTop)
+if alwaysOnTop
+    myGui.Opt('+AlwaysOnTop')
 
 myGui.OnEvent('Close', (*) => ExitApp())
 myGui.Title := 'Ragnarok Market Scanner'
 
 logBox := myGui.AddEdit('x20 y260 w260 h80 ReadOnly -WantReturn', "")
-logBox.Visible := true
+logBox.Visible := !!showConsoleLog
 showLogBox := myGui.AddCheckBox('x200 y30 w120 h20', 'Console Log')
-showLogBox.Value := 1
+showLogBox.Value := showConsoleLog
 showLogBox.OnEvent('Click', ToggleLogBox)
 
 myGui.Show('w300 h380')
@@ -59,7 +73,9 @@ ToggleAlwaysOnTop(ctrl, *) {
         myGui.Opt('+AlwaysOnTop')
     else
         myGui.Opt('-AlwaysOnTop')
+    IniWrite(ctrl.Value, "settings.ini", "Options", "AlwaysOnTop")
 }
+
 
 AddItem(*) {
     result := InputBox('Enter new item name:', 'Add Item', '',)
@@ -115,6 +131,7 @@ RemoveItem(*) {
 
 Scan(*) {
     Log("Starting market scan.")
+    
     ScanMarket(items)
 
     ; TODO: Check for completion
@@ -129,4 +146,15 @@ ToggleLogBox(ctrl, *) {
         logBox.Visible := false
         myGui.Show('w300 h300')
     }
+    IniWrite(ctrl.Value, "settings.ini", "Options", "ShowConsoleLog")
+}
+
+SetMarketBoardLocation(*) {
+    MsgBox("After clicking OK, you will have 2 seconds to move your mouse to the market board location.")
+    CoordMode("Mouse", "Screen")
+    Sleep(2000)
+    MouseGetPos(&locationX, &locationY)
+    IniWrite(locationX, "settings.ini", "MarketBoard", "X")
+    IniWrite(locationY, "settings.ini", "MarketBoard", "Y")
+    Log("Market board location set to: " locationX ", " locationY)
 }
