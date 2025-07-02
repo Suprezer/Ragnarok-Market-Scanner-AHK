@@ -164,3 +164,5 @@ SetMarketBoardLocation(*) {
     IniWrite(locationY, "settings.ini", "MarketBoard", "Y")
     Log("Market board location set to: " locationX ", " locationY)
 }
+
+ESC::ExitApp

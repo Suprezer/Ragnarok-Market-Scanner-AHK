@@ -122,14 +122,19 @@ ScanMarket(itemList) {
         Sleep(1500)
 
         imagePath := A_ScriptDir "\item_Listing.png"
-        CaptureRegion(itemListingRegionX, itemListingRegionY, -1099, -338, A_ScriptDir "\item_listing.png")
 
-        ocrText := OCR(A_ScriptDir "\item_listing.png")
+        ;-965, -338
+        CaptureRegion(itemListingRegionX, itemListingRegionY, -1300, -315, imagePath)
+
+        ;BinarizeImage(imagePath, 200)
+
+        ocrText := OCR(imagePath, 11)
+        ;Log("OCR Result: " ocrText)
         rows := ParseListingRows(ocrText)
         for i, row in rows {
             Log("Row " i ": " row)
         }
 
-        Sleep(500)
+        Sleep(1500)
     }
 }
