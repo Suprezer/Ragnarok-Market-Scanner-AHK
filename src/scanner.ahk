@@ -124,7 +124,7 @@ ScanMarket(itemList) {
         imagePath := A_ScriptDir "\item_Listing.png"
         CaptureRegion(itemListingRegionX, itemListingRegionY, -1099, -338, A_ScriptDir "\item_listing.png")
 
-        ocrText := OCR(A_ScriptDir "\item_listing.png", 6)
+        ocrText := OCR(A_ScriptDir "\item_listing.png")
         rows := ParseListingRows(ocrText)
         for i, row in rows {
             Log("Row " i ": " row)
